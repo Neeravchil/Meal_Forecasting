@@ -10,6 +10,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
 
 html, body, [class*="css"], * {
     font-family: Aptos, 'Nunito Sans', 'Segoe UI', Arial, sans-serif !important;
@@ -18,22 +19,40 @@ html, body, [class*="css"], * {
 .block-container { padding-top: 1rem !important; }
 #MainMenu, footer { visibility: hidden; }
 
-/* Hide sidebar collapse/close button — Material icon renders as raw text in this environment.
-   Multiple selectors cover different Streamlit versions. */
-button[kind="header"],
-[data-testid="collapsedControl"],
+/* ── Sidebar collapse / expand toggle button ──
+   Force Material Symbols font so the icon renders as an arrow, not raw text. */
+[data-testid="stSidebar"] header button,
+[data-testid="stSidebar"] > div > div > button,
 [data-testid="stSidebar"] > div:first-child > div:first-child > button,
-[data-testid="stSidebar"] > div > div > button {
-    display: none !important;
-    visibility: hidden !important;
-    color: transparent !important;
-    font-size: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="collapsedControl"] button,
+button[data-testid="collapsedControl"] {
+    font-family: 'Material Symbols Outlined' !important;
+    font-size: 1.35rem !important;
+    background: rgba(200, 151, 58, 0.15) !important;
+    color: #C8973A !important;
+    border: 1px solid rgba(200, 151, 58, 0.50) !important;
+    border-radius: 6px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
     padding: 0 !important;
-    border: none !important;
-    opacity: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: visible !important;
+    cursor: pointer !important;
+    transition: background 0.2s, color 0.2s !important;
+}
+[data-testid="stSidebar"] header button:hover,
+[data-testid="stSidebar"] > div > div > button:hover,
+[data-testid="stSidebarCollapsedControl"] button:hover,
+[data-testid="collapsedControl"] button:hover {
+    background: rgba(200, 151, 58, 0.35) !important;
+    color: #FFFFFF !important;
 }
 
 /* ════════════════════════════════════════════════════
@@ -267,7 +286,7 @@ with st.sidebar:
 pg = st.navigation(
     [
         st.Page("app_pages/district.py",       title="District Overview",  icon="📊"),
-        st.Page("app_pages/school_forecast.py", title="School Forecaster",  icon="🏫"),
+        st.Page("app_pages/school_forecast.py", title="School Participation Report",  icon="🏫"),
     ],
     position="sidebar",
 )
