@@ -257,7 +257,7 @@ st.markdown("<hr class='thin'/>", unsafe_allow_html=True)
 st.markdown(f"<div class='section-header'>Participation History & 3-Month Forecast"
             f" — {scope_label}</div>", unsafe_allow_html=True)
 st.markdown("<div class='section-sub'>Solid lines = actual data · Dashed = forecast "
-            "· Shaded = ±RMSE confidence band</div>", unsafe_allow_html=True)
+            "· Shaded = ±RMSE band (pp)</div>", unsafe_allow_html=True)
 
 show = st.session_state.get("show_forecast_radio", "Both")
 
@@ -358,9 +358,9 @@ st.markdown("""
 <div style='background:#EBF3FA; border:1px solid #4A90C4; border-radius:6px;
             padding:12px 16px; font-size:0.82rem; color:#003057; margin-bottom:16px;'>
     <b>Model accuracy (test set, Mar 2026 hold-out):</b>&nbsp;
-    Lunch MAE = <b>0.74%</b> &nbsp;·&nbsp; Lunch RMSE = <b>2.92%</b>
+    Lunch MAE = <b>0.74 pp</b> &nbsp;·&nbsp; Lunch RMSE = <b>2.92 pp</b>
     &nbsp;&nbsp;|&nbsp;&nbsp;
-    Breakfast MAE = <b>2.00%</b> &nbsp;·&nbsp; Breakfast RMSE = <b>2.99%</b>
+    Breakfast MAE = <b>2.00 pp</b> &nbsp;·&nbsp; Breakfast RMSE = <b>2.99 pp</b>
 </div>
 """, unsafe_allow_html=True)
 
@@ -392,3 +392,198 @@ for lbl, lp, bp in zip(["Apr (Forecast)", "May (Forecast)", "Jun (Forecast)"],
     })
 
 st.dataframe(pd.DataFrame(table_rows), hide_index=True)
+
+st.markdown("<hr class='thin'/>", unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MEALS TO BE PREPARED
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown("<div class='section-header'>Meals to Be Prepared</div>",
+            unsafe_allow_html=True)
+st.markdown(
+    "<div class='section-sub'>"
+    "Daily meal count = Participation Rate × Enrollment. "
+    "Historical bars use actual reported meal averages; "
+    "forecast bars apply the model's predicted rate to the most-recent enrollment."
+    "</div>",
+    unsafe_allow_html=True,
+)
+
+# ── Enrollment for forecast months ───────────────────────────────────────────
+latest_month_start  = scope_df["MONTH_START"].max()
+forecast_enrollment = scope_df[scope_df["MONTH_START"] == latest_month_start]["ENROLLMENT"].sum()
+
+# ── Historical monthly meal totals ────────────────────────────────────────────
+monthly_meals = (
+    scope_df.sort_values("MONTH_START")
+    .groupby("MONTH_START")
+    .agg(
+        MONTH=("MONTH",                   "first"),
+        LUNCH_MEALS=("LUNCH_AVERAGE_PER_DAY",     "sum"),
+        BF_MEALS=("BREAKFAST_AVERAGE_PER_DAY",    "sum"),
+        ENROLLMENT_TOTAL=("ENROLLMENT",           "sum"),
+    )
+    .reset_index()
+)
+monthly_meals["lbl"]   = monthly_meals["MONTH"].map(MONTH_LABEL)
+monthly_meals          = monthly_meals.dropna(subset=["lbl"])
+monthly_meals["order"] = monthly_meals["lbl"].map(MONTH_ORDER)
+monthly_meals          = monthly_meals.sort_values("order").reset_index(drop=True)
+
+# ── Forecast meal counts ──────────────────────────────────────────────────────
+fc_lunch_meals = [r / 100 * forecast_enrollment for r in lunch_fc_pct]
+fc_bf_meals    = [r / 100 * forecast_enrollment for r in bf_fc_pct]
+
+# ── KPI cards — one per forecast month ───────────────────────────────────────
+kc1, kc2, kc3 = st.columns(3)
+for col, month, lm, bm in zip(
+    [kc1, kc2, kc3],
+    ["April", "May", "June"],
+    fc_lunch_meals, fc_bf_meals,
+):
+    total = lm + bm
+    with col:
+        st.markdown(f"""
+        <div class='metric-card' style='border-top:3px solid #4A90C4; text-align:left;'>
+            <div style='font-size:0.70rem; font-weight:700; letter-spacing:0.12em;
+                        color:#4A90C4; text-transform:uppercase; margin-bottom:8px;'>
+                {month} &nbsp;·&nbsp; Forecast
+            </div>
+            <div style='font-size:1.75rem; font-weight:800; color:#003057;
+                        line-height:1.1; margin-bottom:4px;'>
+                {total:,.0f}
+            </div>
+            <div class='metric-label' style='text-transform:none; letter-spacing:0;
+                        font-size:0.75rem; margin-bottom:12px;'>
+                total meals / day
+            </div>
+            <div style='display:flex; gap:20px; padding-top:10px;
+                        border-top:1px solid #EEF2F7;'>
+                <div>
+                    <div style='font-size:1.05rem; font-weight:700;
+                                color:#003057;'>{lm:,.0f}</div>
+                    <div class='metric-sub'>🍽 Lunch</div>
+                </div>
+                <div style='color:#D1DBE8; align-self:center;'>|</div>
+                <div>
+                    <div style='font-size:1.05rem; font-weight:700;
+                                color:#C8973A;'>{bm:,.0f}</div>
+                    <div class='metric-sub'>🥞 Breakfast</div>
+                </div>
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ── Stacked bar chart: actual + forecast ──────────────────────────────────────
+actual_x_m = monthly_meals["lbl"].tolist()
+act_lunch  = monthly_meals["LUNCH_MEALS"].tolist()
+act_bf     = monthly_meals["BF_MEALS"].tolist()
+
+fig2 = go.Figure()
+
+fig2.add_trace(go.Bar(
+    name="Breakfast (Actual)",
+    x=actual_x_m,
+    y=act_bf,
+    marker_color="rgba(200,151,58,0.80)",
+    marker_line=dict(width=0),
+))
+fig2.add_trace(go.Bar(
+    name="Lunch (Actual)",
+    x=actual_x_m,
+    y=act_lunch,
+    marker_color="rgba(0,48,87,0.85)",
+    marker_line=dict(width=0),
+))
+fig2.add_trace(go.Bar(
+    name="Breakfast (Forecast)",
+    x=FORECAST_MONTHS,
+    y=fc_bf_meals,
+    marker_color="rgba(200,151,58,0.38)",
+    marker_line=dict(color="#C8973A", width=1.5),
+    marker_pattern_shape="/",
+    marker_pattern_fgcolor="#C8973A",
+))
+fig2.add_trace(go.Bar(
+    name="Lunch (Forecast)",
+    x=FORECAST_MONTHS,
+    y=fc_lunch_meals,
+    marker_color="rgba(0,48,87,0.28)",
+    marker_line=dict(color="#003057", width=1.5),
+    marker_pattern_shape="/",
+    marker_pattern_fgcolor="#003057",
+))
+
+fig2.add_shape(
+    type="line",
+    x0=FORECAST_MONTHS[0], x1=FORECAST_MONTHS[0],
+    y0=0, y1=1, xref="x", yref="paper",
+    line=dict(color="#64748B", dash="dot", width=1.5),
+)
+fig2.add_annotation(
+    x=FORECAST_MONTHS[0], y=0.96, xref="x", yref="paper",
+    text="  Forecast →",
+    showarrow=False, font=dict(color="#64748B", size=11), xanchor="left",
+)
+
+fig2.update_layout(
+    **_LAYOUT,
+    barmode="stack",
+    xaxis=dict(
+        title="Month",
+        categoryorder="array",
+        categoryarray=ALL_MONTHS,
+        showgrid=False,
+        gridcolor="#F1F5F9",
+    ),
+    yaxis=dict(
+        title="Avg Daily Meals",
+        showgrid=True,
+        gridcolor="#F1F5F9",
+        tickformat=",",
+    ),
+    height=420,
+    bargap=0.25,
+)
+st.plotly_chart(fig2, use_container_width=True)
+
+# ── Meals detail table ────────────────────────────────────────────────────────
+st.markdown("<div class='section-sub' style='margin-bottom:8px;'>Monthly breakdown — "
+            "actual reported daily averages + forecasted counts</div>",
+            unsafe_allow_html=True)
+
+meals_rows = [
+    {
+        "Month":                 row["lbl"],
+        "Lunch Meals / Day":     f"{row['LUNCH_MEALS']:,.0f}",
+        "Breakfast Meals / Day": f"{row['BF_MEALS']:,.0f}",
+        "Total Meals / Day":     f"{row['LUNCH_MEALS'] + row['BF_MEALS']:,.0f}",
+        "Enrollment":            f"{row['ENROLLMENT_TOTAL']:,}",
+        "Source":                "Actual",
+    }
+    for _, row in monthly_meals.iterrows()
+]
+for lbl, lm, bm in zip(
+    ["Apr (Forecast)", "May (Forecast)", "Jun (Forecast)"],
+    fc_lunch_meals, fc_bf_meals,
+):
+    meals_rows.append({
+        "Month":                 lbl,
+        "Lunch Meals / Day":     f"{lm:,.0f}",
+        "Breakfast Meals / Day": f"{bm:,.0f}",
+        "Total Meals / Day":     f"{lm + bm:,.0f}",
+        "Enrollment":            f"{forecast_enrollment:,}",
+        "Source":                "Forecast",
+    })
+
+st.dataframe(pd.DataFrame(meals_rows), hide_index=True)
+
+st.markdown("""
+<div class='info-box' style='margin-top:10px;'>
+    <b>Formula:</b>
+    &nbsp;Historical months use <em>actual reported average meals per day</em> from the data.
+    &nbsp;Forecast months: <em>Meals = Forecasted Participation Rate × Most-Recent Enrollment</em>.
+    &nbsp;Add a buffer (typically 3–5 %) to account for day-to-day variance before placing food orders.
+</div>
+""", unsafe_allow_html=True)

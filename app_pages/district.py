@@ -412,14 +412,14 @@ st.markdown("<div class='section-sub'>Tested on a hold-out set from Mar 2026 —
 
 acc1, acc2, acc3, acc4 = st.columns(4)
 accuracy_kpis = [
-    ("#4A90C4",  "2.92%", "Lunch RMSE",
-     "Root mean squared error on the test set."),
-    ("#003057",  "0.74%", "Lunch MAE",
-     "Mean absolute error — typical prediction is within 0.74% of actual."),
-    ("#C8973A",  "2.99%", "Breakfast RMSE",
-     "Root mean squared error on the test set."),
-    ("#8B5CF6",  "2.00%", "Breakfast MAE",
-     "Mean absolute error — typical prediction is within 2% of actual."),
+    ("#4A90C4",  "2.92 pp", "Lunch RMSE",
+     "Root mean squared error on the test set (percentage points)."),
+    ("#003057",  "0.74 pp", "Lunch MAE",
+     "Mean absolute error — typical prediction is within 0.74 percentage points of actual."),
+    ("#C8973A",  "2.99 pp", "Breakfast RMSE",
+     "Root mean squared error on the test set (percentage points)."),
+    ("#8B5CF6",  "2.00 pp", "Breakfast MAE",
+     "Mean absolute error — typical prediction is within 2 percentage points of actual."),
 ]
 for col, (color, val, lbl, body) in zip([acc1, acc2, acc3, acc4], accuracy_kpis):
     with col:
