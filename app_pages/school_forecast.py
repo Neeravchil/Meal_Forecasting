@@ -42,7 +42,14 @@ NETWORK_DESCRIPTIONS = {
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 df = load_data()
-sorted_networks = sorted(df["NETWORK"].dropna().unique().tolist())
+def _network_sort_key(n):
+    # Numeric networks ("Network 1" … "Network 17") sort before named ones
+    parts = n.split()
+    if len(parts) == 2 and parts[0] == "Network" and parts[1].isdigit():
+        return (0, int(parts[1]), "")
+    return (1, 0, n)
+
+sorted_networks = sorted(df["NETWORK"].dropna().unique().tolist(), key=_network_sort_key)
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -344,7 +351,7 @@ fig.update_layout(
     ),
     height=460,
 )
-st.plotly_chart(fig)
+st.plotly_chart(fig, use_container_width=True)
 
 # ── Accuracy callout ──────────────────────────────────────────────────────────
 st.markdown("""

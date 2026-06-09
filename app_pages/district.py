@@ -293,7 +293,7 @@ fig_fc.update_layout(
     ),
     height=460,
 )
-st.plotly_chart(fig_fc)
+st.plotly_chart(fig_fc, use_container_width=True)
 
 # ── 3-month forecast summary cards ───────────────────────────────────────
 fc1, fc2, fc3, fc4, fc5, fc6 = st.columns(6)
@@ -331,31 +331,28 @@ with fi_left:
     lunch_feats = ["lunch_part_lag_1", "lunch_mom_pct", "lunch_part_roll3",
                    "MONTH", "absence_rate", "ENROLLMENT"]
     lunch_impts = [69.9, 13.8, 9.3, 3.1, 0.9, 0.6]
-    lunch_colors = ["#003057" if v == max(lunch_impts) else "#4A90C4"
-                    for v in lunch_impts]
-
     fig_fi_l = go.Figure(go.Bar(
         x=lunch_impts[::-1],
         y=lunch_feats[::-1],
         orientation="h",
-        marker_color=lunch_colors[::-1],
+        marker_color="#4A90C4",
         text=[f"{v:.1f}%" for v in lunch_impts[::-1]],
         textposition="outside",
-        textfont=dict(size=10),
+        textfont=dict(size=10, color="#334D66"),
     ))
     fig_fi_l.update_layout(
         paper_bgcolor="white", plot_bgcolor="white",
         font=dict(family="Aptos, Nunito Sans, Segoe UI, Arial", size=12, color="#334D66"),
-        margin=dict(l=10, r=60, t=10, b=10),
+        margin=dict(l=10, r=70, t=30, b=10),
         showlegend=False,
         title=dict(text="🍽️  Lunch model — top drivers",
                    font=dict(size=13, color="#003057")),
         xaxis=dict(showgrid=True, gridcolor="#F1F5F9",
-                   showticklabels=False, range=[0, 85]),
+                   showticklabels=False, range=[0, 120]),
         yaxis=dict(showgrid=False, tickfont=dict(size=10.5)),
-        height=280,
+        height=320,
     )
-    st.plotly_chart(fig_fi_l)
+    st.plotly_chart(fig_fi_l, use_container_width=True)
 
     # Explainer
     st.markdown("""
@@ -371,31 +368,28 @@ with fi_right:
     bf_feats  = ["ENROLLMENT", "breakfast_roll3", "breakfast_lag_1",
                  "MONTH", "pct_free_reduced_lunch", "absence_rate"]
     bf_impts  = [28.9, 28.2, 12.7, 8.4, 6.1, 4.2]
-    bf_colors = ["#C8973A" if v == max(bf_impts) else "#D4AE72"
-                 for v in bf_impts]
-
     fig_fi_b = go.Figure(go.Bar(
         x=bf_impts[::-1],
         y=bf_feats[::-1],
         orientation="h",
-        marker_color=bf_colors[::-1],
+        marker_color="#C8973A",
         text=[f"{v:.1f}%" for v in bf_impts[::-1]],
         textposition="outside",
-        textfont=dict(size=10),
+        textfont=dict(size=10, color="#334D66"),
     ))
     fig_fi_b.update_layout(
         paper_bgcolor="white", plot_bgcolor="white",
         font=dict(family="Aptos, Nunito Sans, Segoe UI, Arial", size=12, color="#334D66"),
-        margin=dict(l=10, r=60, t=10, b=10),
+        margin=dict(l=10, r=70, t=30, b=10),
         showlegend=False,
         title=dict(text="🥐  Breakfast model — top drivers",
                    font=dict(size=13, color="#003057")),
         xaxis=dict(showgrid=True, gridcolor="#F1F5F9",
-                   showticklabels=False, range=[0, 40]),
+                   showticklabels=False, range=[0, 52]),
         yaxis=dict(showgrid=False, tickfont=dict(size=10.5)),
-        height=280,
+        height=320,
     )
-    st.plotly_chart(fig_fi_b)
+    st.plotly_chart(fig_fi_b, use_container_width=True)
 
     st.markdown("""
     <div class='insight-card'>
@@ -507,7 +501,7 @@ fig2.update_layout(
     height=480,
 )
 
-st.plotly_chart(fig2)
+st.plotly_chart(fig2, use_container_width=True)
 
 if scatter_df.empty:
     st.warning("No schools match the current filters.")
