@@ -19,18 +19,26 @@ html, body, [class*="css"], * {
 .block-container { padding-top: 1rem !important; }
 #MainMenu, footer { visibility: hidden; }
 
-/* ── Sidebar collapse / expand toggle button ──
-   Force Material Symbols font so the icon renders as an arrow, not raw text. */
-[data-testid="stSidebar"] header button,
-[data-testid="stSidebar"] > div > div > button,
-[data-testid="stSidebar"] > div:first-child > div:first-child > button,
-[data-testid="stSidebarCollapsedControl"] button,
-[data-testid="collapsedControl"] button,
-button[data-testid="collapsedControl"] {
-    font-family: 'Material Symbols Outlined' !important;
-    font-size: 1.35rem !important;
-    background: rgba(200, 151, 58, 0.15) !important;
-    color: #C8973A !important;
+/* ── Fix: restore Material Symbols Rounded font on icon spans ──
+   The * rule above overrides every element's font-family, breaking ligature
+   rendering and causing raw text like "keyboard_double_arrow_left" to appear. */
+[data-testid="stIconMaterial"] {
+    font-family: 'Material Symbols Rounded' !important;
+    font-feature-settings: 'liga' !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    -webkit-font-smoothing: antialiased !important;
+}
+
+/* ── Sidebar collapse / expand toggle buttons (Streamlit 1.57 testids) ──
+   Replace icon with the sidebar-layout SVG shown by the user. */
+button[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarCollapseButton"] button {
+    background-color: rgba(200, 151, 58, 0.15) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C8973A'%3E%3Cpath d='M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 7H5v2h4V7zm0 4H5v2h4v-2zm0 4H5v2h4v-2zm10-8h-8v2h8V7zm0 4h-8v2h8v-2z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 20px 20px !important;
+    color: transparent !important;
     border: 1px solid rgba(200, 151, 58, 0.50) !important;
     border-radius: 6px !important;
     width: 36px !important;
@@ -43,16 +51,22 @@ button[data-testid="collapsedControl"] {
     justify-content: center !important;
     opacity: 1 !important;
     visibility: visible !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     cursor: pointer !important;
-    transition: background 0.2s, color 0.2s !important;
+    transition: background-color 0.2s !important;
 }
-[data-testid="stSidebar"] header button:hover,
-[data-testid="stSidebar"] > div > div > button:hover,
-[data-testid="stSidebarCollapsedControl"] button:hover,
-[data-testid="collapsedControl"] button:hover {
-    background: rgba(200, 151, 58, 0.35) !important;
-    color: #FFFFFF !important;
+/* Hide the icon spans inside the buttons so no text leaks through */
+button[data-testid="stExpandSidebarButton"] > *,
+[data-testid="stSidebarCollapseButton"] button > * {
+    display: none !important;
+}
+button[data-testid="stExpandSidebarButton"]:hover,
+[data-testid="stSidebarCollapseButton"] button:hover {
+    background-color: rgba(200, 151, 58, 0.35) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFFFFF'%3E%3Cpath d='M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 7H5v2h4V7zm0 4H5v2h4v-2zm0 4H5v2h4v-2zm10-8h-8v2h8V7zm0 4h-8v2h8v-2z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 20px 20px !important;
 }
 
 /* ════════════════════════════════════════════════════
