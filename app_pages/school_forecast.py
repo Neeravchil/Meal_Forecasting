@@ -434,86 +434,112 @@ monthly_meals          = monthly_meals.sort_values("order").reset_index(drop=Tru
 fc_lunch_meals = [r / 100 * forecast_enrollment for r in lunch_fc_pct]
 fc_bf_meals    = [r / 100 * forecast_enrollment for r in bf_fc_pct]
 
-# ── KPI cards — one per forecast month ───────────────────────────────────────
+# ── KPI cards — one per forecast month, respects sidebar toggle ──────────────
 kc1, kc2, kc3 = st.columns(3)
 for col, month, lm, bm in zip(
     [kc1, kc2, kc3],
     ["April", "May", "June"],
     fc_lunch_meals, fc_bf_meals,
 ):
-    total = lm + bm
     with col:
-        st.markdown(f"""
-        <div class='metric-card' style='border-top:3px solid #4A90C4; text-align:left;'>
-            <div style='font-size:0.70rem; font-weight:700; letter-spacing:0.12em;
-                        color:#4A90C4; text-transform:uppercase; margin-bottom:8px;'>
-                {month} &nbsp;·&nbsp; Forecast
-            </div>
-            <div style='font-size:1.75rem; font-weight:800; color:#003057;
-                        line-height:1.1; margin-bottom:4px;'>
-                {total:,.0f}
-            </div>
-            <div class='metric-label' style='text-transform:none; letter-spacing:0;
-                        font-size:0.75rem; margin-bottom:12px;'>
-                total meals / day
-            </div>
-            <div style='display:flex; gap:20px; padding-top:10px;
-                        border-top:1px solid #EEF2F7;'>
-                <div>
-                    <div style='font-size:1.05rem; font-weight:700;
-                                color:#003057;'>{lm:,.0f}</div>
-                    <div class='metric-sub'>🍽 Lunch</div>
+        if show == "Lunch":
+            st.markdown(f"""
+            <div class='metric-card' style='border-top:3px solid #4A90C4; text-align:left;'>
+                <div style='font-size:0.70rem; font-weight:700; letter-spacing:0.12em;
+                            color:#4A90C4; text-transform:uppercase; margin-bottom:8px;'>
+                    {month} &nbsp;·&nbsp; Forecast
                 </div>
-                <div style='color:#D1DBE8; align-self:center;'>|</div>
-                <div>
-                    <div style='font-size:1.05rem; font-weight:700;
-                                color:#C8973A;'>{bm:,.0f}</div>
-                    <div class='metric-sub'>🥞 Breakfast</div>
+                <div style='font-size:1.75rem; font-weight:800; color:#003057;
+                            line-height:1.1; margin-bottom:4px;'>{lm:,.0f}</div>
+                <div class='metric-label' style='text-transform:none; letter-spacing:0;
+                            font-size:0.75rem;'>lunch meals / day</div>
+            </div>""", unsafe_allow_html=True)
+
+        elif show == "Breakfast":
+            st.markdown(f"""
+            <div class='metric-card' style='border-top:3px solid #4A90C4; text-align:left;'>
+                <div style='font-size:0.70rem; font-weight:700; letter-spacing:0.12em;
+                            color:#4A90C4; text-transform:uppercase; margin-bottom:8px;'>
+                    {month} &nbsp;·&nbsp; Forecast
                 </div>
-            </div>
-        </div>""", unsafe_allow_html=True)
+                <div style='font-size:1.75rem; font-weight:800; color:#C8973A;
+                            line-height:1.1; margin-bottom:4px;'>{bm:,.0f}</div>
+                <div class='metric-label' style='text-transform:none; letter-spacing:0;
+                            font-size:0.75rem;'>breakfast meals / day</div>
+            </div>""", unsafe_allow_html=True)
+
+        else:
+            st.markdown(f"""
+            <div class='metric-card' style='border-top:3px solid #4A90C4; text-align:left;'>
+                <div style='font-size:0.70rem; font-weight:700; letter-spacing:0.12em;
+                            color:#4A90C4; text-transform:uppercase; margin-bottom:8px;'>
+                    {month} &nbsp;·&nbsp; Forecast
+                </div>
+                <div style='font-size:1.75rem; font-weight:800; color:#003057;
+                            line-height:1.1; margin-bottom:4px;'>{lm + bm:,.0f}</div>
+                <div class='metric-label' style='text-transform:none; letter-spacing:0;
+                            font-size:0.75rem; margin-bottom:12px;'>total meals / day</div>
+                <div style='display:flex; gap:20px; padding-top:10px;
+                            border-top:1px solid #EEF2F7;'>
+                    <div>
+                        <div style='font-size:1.05rem; font-weight:700;
+                                    color:#003057;'>{lm:,.0f}</div>
+                        <div class='metric-sub'>Lunch</div>
+                    </div>
+                    <div style='color:#D1DBE8; align-self:center; font-size:1.2rem;'>|</div>
+                    <div>
+                        <div style='font-size:1.05rem; font-weight:700;
+                                    color:#C8973A;'>{bm:,.0f}</div>
+                        <div class='metric-sub'>Breakfast</div>
+                    </div>
+                </div>
+            </div>""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ── Stacked bar chart: actual + forecast ──────────────────────────────────────
+# ── Stacked bar chart: actual + forecast, respects sidebar toggle ─────────────
 actual_x_m = monthly_meals["lbl"].tolist()
 act_lunch  = monthly_meals["LUNCH_MEALS"].tolist()
 act_bf     = monthly_meals["BF_MEALS"].tolist()
 
 fig2 = go.Figure()
 
-fig2.add_trace(go.Bar(
-    name="Breakfast (Actual)",
-    x=actual_x_m,
-    y=act_bf,
-    marker_color="rgba(200,151,58,0.80)",
-    marker_line=dict(width=0),
-))
-fig2.add_trace(go.Bar(
-    name="Lunch (Actual)",
-    x=actual_x_m,
-    y=act_lunch,
-    marker_color="rgba(0,48,87,0.85)",
-    marker_line=dict(width=0),
-))
-fig2.add_trace(go.Bar(
-    name="Breakfast (Forecast)",
-    x=FORECAST_MONTHS,
-    y=fc_bf_meals,
-    marker_color="rgba(200,151,58,0.38)",
-    marker_line=dict(color="#C8973A", width=1.5),
-    marker_pattern_shape="/",
-    marker_pattern_fgcolor="#C8973A",
-))
-fig2.add_trace(go.Bar(
-    name="Lunch (Forecast)",
-    x=FORECAST_MONTHS,
-    y=fc_lunch_meals,
-    marker_color="rgba(0,48,87,0.28)",
-    marker_line=dict(color="#003057", width=1.5),
-    marker_pattern_shape="/",
-    marker_pattern_fgcolor="#003057",
-))
+if show in ("Breakfast", "Both"):
+    fig2.add_trace(go.Bar(
+        name="Breakfast (Actual)",
+        x=actual_x_m,
+        y=act_bf,
+        marker_color="rgba(200,151,58,0.80)",
+        marker_line=dict(width=0),
+    ))
+if show in ("Lunch", "Both"):
+    fig2.add_trace(go.Bar(
+        name="Lunch (Actual)",
+        x=actual_x_m,
+        y=act_lunch,
+        marker_color="rgba(0,48,87,0.85)",
+        marker_line=dict(width=0),
+    ))
+if show in ("Breakfast", "Both"):
+    fig2.add_trace(go.Bar(
+        name="Breakfast (Forecast)",
+        x=FORECAST_MONTHS,
+        y=fc_bf_meals,
+        marker_color="rgba(200,151,58,0.38)",
+        marker_line=dict(color="#C8973A", width=1.5),
+        marker_pattern_shape="/",
+        marker_pattern_fgcolor="#C8973A",
+    ))
+if show in ("Lunch", "Both"):
+    fig2.add_trace(go.Bar(
+        name="Lunch (Forecast)",
+        x=FORECAST_MONTHS,
+        y=fc_lunch_meals,
+        marker_color="rgba(0,48,87,0.28)",
+        marker_line=dict(color="#003057", width=1.5),
+        marker_pattern_shape="/",
+        marker_pattern_fgcolor="#003057",
+    ))
 
 fig2.add_shape(
     type="line",
@@ -527,6 +553,12 @@ fig2.add_annotation(
     showarrow=False, font=dict(color="#64748B", size=11), xanchor="left",
 )
 
+_ytitle = {
+    "Lunch":     "Avg Daily Lunch Meals",
+    "Breakfast": "Avg Daily Breakfast Meals",
+    "Both":      "Avg Daily Meals",
+}.get(show, "Avg Daily Meals")
+
 fig2.update_layout(
     **_LAYOUT,
     barmode="stack",
@@ -538,7 +570,7 @@ fig2.update_layout(
         gridcolor="#F1F5F9",
     ),
     yaxis=dict(
-        title="Avg Daily Meals",
+        title=_ytitle,
         showgrid=True,
         gridcolor="#F1F5F9",
         tickformat=",",
@@ -548,34 +580,28 @@ fig2.update_layout(
 )
 st.plotly_chart(fig2, use_container_width=True)
 
-# ── Meals detail table ────────────────────────────────────────────────────────
+# ── Meals detail table — columns filtered by sidebar toggle ───────────────────
 st.markdown("<div class='section-sub' style='margin-bottom:8px;'>Monthly breakdown — "
             "actual reported daily averages + forecasted counts</div>",
             unsafe_allow_html=True)
 
-meals_rows = [
-    {
-        "Month":                 row["lbl"],
-        "Lunch Meals / Day":     f"{row['LUNCH_MEALS']:,.0f}",
-        "Breakfast Meals / Day": f"{row['BF_MEALS']:,.0f}",
-        "Total Meals / Day":     f"{row['LUNCH_MEALS'] + row['BF_MEALS']:,.0f}",
-        "Enrollment":            f"{row['ENROLLMENT_TOTAL']:,}",
-        "Source":                "Actual",
-    }
-    for _, row in monthly_meals.iterrows()
-]
+meals_rows = []
+for _, row in monthly_meals.iterrows():
+    r = {"Month": row["lbl"], "Enrollment": f"{row['ENROLLMENT_TOTAL']:,}", "Source": "Actual"}
+    if show in ("Lunch",     "Both"): r["Lunch Meals / Day"]     = f"{row['LUNCH_MEALS']:,.0f}"
+    if show in ("Breakfast", "Both"): r["Breakfast Meals / Day"] = f"{row['BF_MEALS']:,.0f}"
+    if show == "Both":                r["Total Meals / Day"]      = f"{row['LUNCH_MEALS'] + row['BF_MEALS']:,.0f}"
+    meals_rows.append(r)
+
 for lbl, lm, bm in zip(
     ["Apr (Forecast)", "May (Forecast)", "Jun (Forecast)"],
     fc_lunch_meals, fc_bf_meals,
 ):
-    meals_rows.append({
-        "Month":                 lbl,
-        "Lunch Meals / Day":     f"{lm:,.0f}",
-        "Breakfast Meals / Day": f"{bm:,.0f}",
-        "Total Meals / Day":     f"{lm + bm:,.0f}",
-        "Enrollment":            f"{forecast_enrollment:,}",
-        "Source":                "Forecast",
-    })
+    r = {"Month": lbl, "Enrollment": f"{forecast_enrollment:,}", "Source": "Forecast"}
+    if show in ("Lunch",     "Both"): r["Lunch Meals / Day"]     = f"{lm:,.0f}"
+    if show in ("Breakfast", "Both"): r["Breakfast Meals / Day"] = f"{bm:,.0f}"
+    if show == "Both":                r["Total Meals / Day"]      = f"{lm + bm:,.0f}"
+    meals_rows.append(r)
 
 st.dataframe(pd.DataFrame(meals_rows), hide_index=True)
 
